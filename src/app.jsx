@@ -1,14 +1,29 @@
-import { RouterProvider, createBrowserRouter, createRoutesFromElements, Route, NavLink, Link } from "react-router-dom"
+import { RouterProvider, createBrowserRouter, createRoutesFromElements, Route, NavLink, Link, useLocation } from "react-router-dom"
 
 const Header = () => {
+  const location = useLocation()
+
+  const links = [
+    { path: '/', text: 'Início' },
+    { path: '/sobre', text: 'Sobre' },
+    { path: '/preco', text: 'Preço' }
+  ]
+  const isDarkTheme = location.pathname === '/sobre' || location.pathname === '/preco'
+
   return (
     <header>
       <nav className="nav">
-        <Link to="/"><img src="/logo-viajou-anotou-light.png" alt="Logo Viajou Anotou" className="logo" /></Link>
+        <Link to="/"><img src={`/logo-viajou-anotou-${isDarkTheme ? 'dark' : 'light'}.png`} alt="Logo Viajou Anotou" className="logo" /></Link>
         <ul>
-          <li><NavLink to="/">Início</NavLink></li>
-          <li><NavLink to="/sobre">Sobre</NavLink></li>
-          <li><NavLink to="/preco">Preço</NavLink></li>
+          {links.map(link => (
+            <li key={link.path}>
+              <NavLink
+                to={link.path}
+                style={{ color: isDarkTheme ? '#c2c2c2' : null }}>
+                {link.text}
+              </NavLink>
+            </li>
+          ))}
         </ul>
       </nav>
     </header>
