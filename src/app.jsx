@@ -1,17 +1,23 @@
 import { RouterProvider, createBrowserRouter, createRoutesFromElements, Route, NavLink, Link } from "react-router-dom"
+
+const Header = () => {
+  return (
+    <header>
+      <nav className="nav">
+        <Link to="/"><img src="/logo-viajou-anotou-light.png" alt="Logo Viajou Anotou" className="logo" /></Link>
+        <ul>
+          <li><NavLink to="/">Início</NavLink></li>
+          <li><NavLink to="/sobre">Sobre</NavLink></li>
+          <li><NavLink to="/preco">Preço</NavLink></li>
+        </ul>
+      </nav>
+    </header>
+  )
+}
 const Home = () => {
   return (
     <>
-      <header>
-        <nav className="nav">
-          <Link to="/"><img src="/logo-viajou-anotou-light.png" alt="Logo Viajou Anotou" className="logo" /></Link>
-          <ul>
-            <li><NavLink to="/">Início</NavLink></li>
-            <li><NavLink to="/sobre">Sobre</NavLink></li>
-            <li><NavLink to="/preco">Preço</NavLink></li>
-          </ul>
-        </nav>
-      </header>
+      <Header />
       <main className="main-home">
         <section>
           <h1>Você viaja o mundo. <br />E o ViajouAnotou mantém suas aventuras anotadas.</h1>
@@ -26,16 +32,7 @@ const Home = () => {
 const Sobre = () => {
   return (
     <>
-      <header>
-        <nav className="nav">
-          <Link to="/"><img src="/logo-viajou-anotou-light.png" alt="Logo Viajou Anotou" className="logo" /></Link>
-          <ul>
-            <li><NavLink to="/">Início</NavLink></li>
-            <li><NavLink to="/sobre">Sobre</NavLink></li>
-            <li><NavLink to="/preco">Preço</NavLink></li>
-          </ul>
-        </nav>
-      </header>
+      <Header />
       <main className="main-about">
         <section>
           <div>
@@ -52,17 +49,8 @@ const Sobre = () => {
 
 const Preco = () => {
   return (
-    <div>
-      <header>
-        <nav className="nav">
-          <Link to="/"><img src="/logo-viajou-anotou-light.png" alt="Logo Viajou Anotou" className="logo" /></Link>
-          <ul>
-            <li><NavLink to="/">Início</NavLink></li>
-            <li><NavLink to="/sobre">Sobre</NavLink></li>
-            <li><NavLink to="/preco">Preço</NavLink></li>
-          </ul>
-        </nav>
-      </header>
+    <>
+      <Header />
       <main className="main-pricing">
         <section>
           <div>
@@ -72,7 +60,7 @@ const Preco = () => {
           <img src="preco-viajou-anotou.jpg" alt="Pessoas transitando em uma faixa de pedestre" />
         </section>
       </main>
-    </div>
+    </>
   )
 }
 
