@@ -9,7 +9,7 @@ const Header = () => {
     { path: '/preco', text: 'Preço' }
   ]
   const isDarkTheme = location.pathname !== '/'
-  
+
   return (
     <header>
       <nav className="nav">
@@ -37,7 +37,7 @@ const Home = () => {
         <section>
           <h1>Você viaja o mundo. <br />E o ViajouAnotou mantém suas aventuras anotadas.</h1>
           <h2>Um mapa mundial que rastreia por onde você passou. Nunca esqueça suas experiências e mostre aos seus amigos o quê você fez pelo mundo.</h2>
-          <a className="cta" href="">Começar agora</a>
+          <Link className="cta" to="/sobre">Começar agora</Link>
         </section>
       </main>
     </>
