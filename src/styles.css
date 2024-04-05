@@ -145,3 +145,28 @@ main {
   border-radius: 50px;
   width: 460px;
 }
+
+.main-notfound {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background-color: #fff;
+  color: #666;
+  gap: 3rem;
+}
+
+.main-notfound h1 {
+  font-size: 5rem;
+  line-height: 6rem;
+}
+
+.main-notfound p {
+  margin: 3rem 0;
+  font-size: 2rem;
+}
+
+.main-notfound a {
+  color: var(--color-primary);
+  font-weight: 600;
+}
