@@ -8,8 +8,8 @@ const Header = () => {
     { path: '/sobre', text: 'Sobre' },
     { path: '/preco', text: 'Preço' }
   ]
-  const isDarkTheme = location.pathname === '/sobre' || location.pathname === '/preco'
-
+  const isDarkTheme = location.pathname !== '/'
+  
   return (
     <header>
       <nav className="nav">
