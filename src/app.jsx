@@ -1,14 +1,14 @@
-import { RouterProvider, createBrowserRouter, createRoutesFromElements, Route } from "react-router-dom"
+import { RouterProvider, createBrowserRouter, createRoutesFromElements, Route, NavLink, Link } from "react-router-dom"
 const Home = () => {
   return (
     <>
       <header>
         <nav className="nav">
-          <img src="/logo-viajou-anotou-light.png" alt="Logo Viajou Anotou" className="logo" />
+          <Link to="/"><img src="/logo-viajou-anotou-light.png" alt="Logo Viajou Anotou" className="logo" /></Link>
           <ul>
-            <li><a href="">INÍCIO</a></li>
-            <li><a href="">PREÇO</a></li>
-            <li><a href="">SOBRE</a></li>
+            <li><NavLink to="/">Início</NavLink></li>
+            <li><NavLink to="/sobre">Sobre</NavLink></li>
+            <li><NavLink to="/preco">Preço</NavLink></li>
           </ul>
         </nav>
       </header>
@@ -28,11 +28,11 @@ const Sobre = () => {
     <>
       <header>
         <nav className="nav">
-          <img src="/logo-viajou-anotou-light.png" alt="Logo Viajou Anotou" className="logo" />
+          <Link to="/"><img src="/logo-viajou-anotou-light.png" alt="Logo Viajou Anotou" className="logo" /></Link>
           <ul>
-            <li><a href="">INÍCIO</a></li>
-            <li><a href="">PREÇO</a></li>
-            <li><a href="">SOBRE</a></li>
+            <li><NavLink to="/">Início</NavLink></li>
+            <li><NavLink to="/sobre">Sobre</NavLink></li>
+            <li><NavLink to="/preco">Preço</NavLink></li>
           </ul>
         </nav>
       </header>
@@ -55,11 +55,11 @@ const Preco = () => {
     <div>
       <header>
         <nav className="nav">
-          <img src="/logo-viajou-anotou-light.png" alt="Logo Viajou Anotou" className="logo" />
+          <Link to="/"><img src="/logo-viajou-anotou-light.png" alt="Logo Viajou Anotou" className="logo" /></Link>
           <ul>
-            <li><a href="">INÍCIO</a></li>
-            <li><a href="">PREÇO</a></li>
-            <li><a href="">SOBRE</a></li>
+            <li><NavLink to="/">Início</NavLink></li>
+            <li><NavLink to="/sobre">Sobre</NavLink></li>
+            <li><NavLink to="/preco">Preço</NavLink></li>
           </ul>
         </nav>
       </header>
