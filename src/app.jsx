@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { RouterProvider, useParams, createBrowserRouter, createRoutesFromElements, Route, NavLink, Link, useLocation, Outlet, Navigate } from "react-router-dom"
+import { RouterProvider, useParams, createBrowserRouter, createRoutesFromElements, Route, NavLink, Link, useLocation, Outlet, Navigate, useNavigate, useLoaderData, useOutletContext } from "react-router-dom"
 
 
 const Logo = ({ variant = 'dark' }) =>
@@ -21,26 +21,26 @@ const Header = () => {
   const isNotHomePage = location.pathname !== '/'
 
   return (
-      <nav className="nav">
-        <Logo variant={isNotHomePage ? 'dark' : 'light'}/>
-        <ul>
-          {links.map(link => {
-            const isLoginBtn = link.path === '/login'
-            const shouldBeGray = isNotHomePage && location.pathname !== link.path && !isLoginBtn
-            return (
-              <li key={link.path}>
-                <NavLink
-                  to={link.path}
-                  style={shouldBeGray ? { color: '#c2c2c2' } : isLoginBtn ? { color: '#fff' } : null}
-                  className={isLoginBtn ? 'cta' : ''}
-                >
-                  {link.text}
-                </NavLink>
-              </li>
-            )
-          })}
-        </ul>
-      </nav>
+    <nav className="nav">
+      <Logo variant={isNotHomePage ? 'dark' : 'light'} />
+      <ul>
+        {links.map(link => {
+          const isLoginBtn = link.path === '/login'
+          const shouldBeGray = isNotHomePage && location.pathname !== link.path && !isLoginBtn
+          return (
+            <li key={link.path}>
+              <NavLink
+                to={link.path}
+                style={shouldBeGray ? { color: '#c2c2c2' } : isLoginBtn ? { color: '#fff' } : null}
+                className={isLoginBtn ? 'cta' : ''}
+              >
+                {link.text}
+              </NavLink>
+            </li>
+          )
+        })}
+      </ul>
+    </nav>
   )
 }
 
@@ -52,7 +52,7 @@ const Home = () => {
         <section>
           <h1>Você viaja o mundo. <br />E o ViajouAnotou mantém suas aventuras anotadas.</h1>
           <h2>Um mapa mundial que rastreia por onde você passou. Nunca esqueça suas experiências e mostre aos seus amigos o quê você fez pelo mundo.</h2>
-          <Link className="cta" to="/app/cidades">Começar agora</Link>
+          <Link className="cta" to="app">Começar agora</Link>
         </section>
       </main>
     </>
@@ -115,30 +115,41 @@ const LogIn = () => {
   )
 }
 
-const AppLayout = () =>
-  <main className="main-app-layout">
-    <aside className="sidebar">
-      <Link to="/"><img src={`/logo-viajou-anotou-dark.png`} alt="Logo Viajou Anotou" className="logo" /></Link>
-      <nav className="nav-app-layout">
-        <ul>
-          <li><NavLink to="cidades">Cidades</NavLink></li>
-          <li><NavLink to="paises">Paises</NavLink></li>
-        </ul>
-      </nav>
-      <Outlet />
-    </aside>
-    <div className="map">
-      <h1>map</h1>
-    </div>
-  </main>
+const tripsLoader = async () => {
+  const response = await fetch('https://raw.githubusercontent.com/FelipeAmorimDEV/fake-data/main/fake-cities.json')
+  return response.json()
+}
 
+const AppLayout = () => {
+const trips = useLoaderData()
 
-const Cities = ({ travels }) => {
+  return (
+    <main className="main-app-layout">
+      <aside className="sidebar">
+        <Link to="/"><img src={`/logo-viajou-anotou-dark.png`} alt="Logo Viajou Anotou" className="logo" /></Link>
+        <nav className="nav-app-layout">
+          <ul>
+            <li><NavLink to="cidades">Cidades</NavLink></li>
+            <li><NavLink to="paises">Paises</NavLink></li>
+          </ul>
+        </nav>
+        <Outlet context={trips} />
+      </aside>
+      <div className="map">
+        <h1>map</h1>
+      </div>
+    </main>
+  )
+}
+
+const Cities = () => {
+  const trips = useOutletContext()
+  
   return (
     <div className="cities">
-      {travels.map((travel) =>
-        <Link key={travel.id} to={`${travel.id}`}>
-          <h3>{travel.name}</h3>
+      {trips.map((trip) =>
+        <Link key={trip.id} to={`${trip.id}`}>
+          <h3>{trip.name}</h3>
           <button>x</button>
         </Link>
       )}
@@ -147,8 +158,12 @@ const Cities = ({ travels }) => {
 }
 
 const CitiesDetails = ({ travels }) => {
+  const trips = useOutletContext()
   const params = useParams()
-  const cityDetails = travels.find(city => String(city.id) === params.id)
+  const navigate = useNavigate()
+  const cityDetails = trips.find(city => String(city.id) === params.id)
+
+  const handleBackBtn = () => navigate(-1)
 
   return cityDetails && (
     <div className="city-details">
@@ -157,14 +172,16 @@ const CitiesDetails = ({ travels }) => {
         <h3>{cityDetails.name}</h3>
         <h5>Suas anotações</h5>
         <p>{cityDetails.notes}</p>
+        <button className="btn-back" onClick={handleBackBtn}>&larr; Voltar</button>
       </div>
     </div>
   )
 
 }
 
-const Countries = ({ travels }) => {
-  const uniqueVisitedCountries = travels.reduce((acc, item) => acc.includes(item.country) ? [...acc] : [...acc, item.country], [])
+const Countries = () => {
+  const trips = useOutletContext()
+  const uniqueVisitedCountries = trips.reduce((acc, item) => acc.includes(item.country) ? [...acc] : [...acc, item.country], [])
 
   return (
     <ul className="countries">
@@ -188,28 +205,18 @@ const NotFound = () => {
 }
 
 const App = () => {
-  const [travels, setTravels] = useState([])
-
-  useEffect(() => {
-    fetch('https://raw.githubusercontent.com/FelipeAmorimDEV/fake-data/main/fake-cities.json')
-      .then(r => r.json())
-      .then(data => setTravels(data))
-      .catch(error => alert(error.message))
-  }, [])
-
-
   const router = createBrowserRouter(
     createRoutesFromElements(
       <Route path="/">
         <Route index element={<Home />} />
-        <Route path="/sobre" element={<Sobre />} />
-        <Route path="/preco" element={<Preco />} />
-        <Route path="/login" element={<LogIn />} />
-        <Route path="/app" element={<AppLayout />}>
+        <Route path="sobre" element={<Sobre />} />
+        <Route path="preco" element={<Preco />} />
+        <Route path="login" element={<LogIn />} />
+        <Route path="app" element={<AppLayout />} loader={tripsLoader}>
           <Route index element={<Navigate to="cidades" replace />} />
-          <Route path="cidades" element={<Cities travels={travels} />} />
-          <Route path="cidades/:id" element={<CitiesDetails travels={travels} />} />
-          <Route path="paises" element={<Countries travels={travels} />} />
+          <Route path="cidades" element={<Cities />} />
+          <Route path="cidades/:id" element={<CitiesDetails />} />
+          <Route path="paises" element={<Countries />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Route>
