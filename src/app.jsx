@@ -1,6 +1,7 @@
 import { RouterProvider, useParams, createBrowserRouter, createRoutesFromElements, Route, NavLink, Link, useLocation, Outlet, Navigate, useNavigate, useLoaderData, useOutletContext, useSearchParams } from "react-router-dom"
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvent } from 'react-leaflet'
 import { useState } from "react"
+import localforage from "localforage"
 
 const Logo = ({ variant = 'dark' }) =>
   <header>
@@ -116,15 +117,22 @@ const LogIn = () => {
 }
 
 const tripsLoader = async () => {
-  const response = await fetch('https://raw.githubusercontent.com/FelipeAmorimDEV/fake-data/main/fake-cities.json')
-  return response.json()
+  const cities = await localforage.getItem('cities')
+  return cities ?? []
 }
 
-const MapInstance = ({ position }) => {
+const ChangeCenter = ({ position }) => {
   const map = useMap()
   map.setView(position)
- 
+
   return null
+}
+
+const ClickToCity = () => {
+  const navigate = useNavigate()
+  useMapEvent({
+    click: (e) => navigate(`/app/form/?latitude=${e.latlng.lat}&longitude=${e.latlng.lng}`)
+  })
 }
 
 const curitibaCordenadas = { latitude: '-25.438611111089152', longitude: '-49.260972203972706' }
@@ -135,7 +143,7 @@ const AppLayout = () => {
 
   const latitude = searchParams.get('latitude')
   const longitude = searchParams.get('longitude')
- 
+
 
   return (
     <main className="main-app-layout">
@@ -158,12 +166,13 @@ const AppLayout = () => {
           {trips.map(citie => (
             <Marker key={citie.id} position={[citie.position.latitude, citie.position.longitude]}>
               <Popup>
-               {citie.notes}
+                {citie.notes}
               </Popup>
             </Marker>
           ))}
 
-          {latitude && longitude && <MapInstance position={[latitude,longitude]} />}
+          {latitude && longitude && <ChangeCenter position={[latitude, longitude]} />}
+          <ClickToCity />
 
         </MapContainer>
       </div>
@@ -174,16 +183,20 @@ const AppLayout = () => {
 const Cities = () => {
   const trips = useOutletContext()
 
-  return (
-    <div className="cities">
-      {trips.map((trip) =>
-        <Link key={trip.id} to={`${trip.id}?latitude=${trip.position.latitude}&longitude=${trip.position.longitude}`}>
-          <h3>{trip.name}</h3>
-          <button>x</button>
-        </Link>
-      )}
-    </div>
-  )
+  return trips.length === 0
+    ? <p className="initial-message ">Clique no mapa para adicionar uma cidade</p>
+    : (
+      <div className="cities">
+        {trips.map((trip) =>
+          <Link key={trip.id} to={`${trip.id}?latitude=${trip.position.latitude}&longitude=${trip.position.longitude}`}>
+            <h3>{trip.name}</h3>
+            <button>x</button>
+          </Link>
+        )}
+      </div>
+    )
+
+
 }
 
 const CitiesDetails = () => {
@@ -191,9 +204,9 @@ const CitiesDetails = () => {
   const params = useParams()
   const navigate = useNavigate()
   const cityDetails = trips.find(city => String(city.id) === params.id)
-  
+
   const handleBackBtn = () => navigate('/app/cidades')
-  
+
 
   return cityDetails && (
     <div className="city-details">
@@ -207,6 +220,29 @@ const CitiesDetails = () => {
     </div>
   )
 
+}
+
+const FormTrip = () => {
+  return (
+    <form className="form-edit-city">
+      <label>
+        <span>Nome da cidade</span>
+        <input type="text" />
+      </label>
+      <label>
+        <span>Quando você foi para [CIDADE]</span>
+        <input type="date" />
+      </label>
+      <label>
+        <span>Suas anotações sobre a cidade</span>
+        <textarea />
+      </label>
+      <div className="form-buttons">
+        <button className="btn-back ">&larr; Voltar</button>
+        <button className="btn-save">Salvar</button>
+      </div>
+    </form>
+  )
 }
 
 const Countries = () => {
@@ -246,6 +282,7 @@ const App = () => {
           <Route index element={<Navigate to="cidades" replace />} />
           <Route path="cidades" element={<Cities />} />
           <Route path="cidades/:id" element={<CitiesDetails />} />
+          <Route path="form" element={<FormTrip />} />
           <Route path="paises" element={<Countries />} />
         </Route>
         <Route path="*" element={<NotFound />} />
