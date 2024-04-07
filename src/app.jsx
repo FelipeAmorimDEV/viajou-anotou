@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react"
-import { RouterProvider, useParams, createBrowserRouter, createRoutesFromElements, Route, NavLink, Link, useLocation, Outlet, Navigate, useNavigate, useLoaderData, useOutletContext } from "react-router-dom"
-
+import { RouterProvider, useParams, createBrowserRouter, createRoutesFromElements, Route, NavLink, Link, useLocation, Outlet, Navigate, useNavigate, useLoaderData, useOutletContext, useSearchParams } from "react-router-dom"
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import { useState } from "react"
 
 const Logo = ({ variant = 'dark' }) =>
   <header>
@@ -120,8 +120,22 @@ const tripsLoader = async () => {
   return response.json()
 }
 
+const MapInstance = ({ position }) => {
+  const map = useMap()
+  map.setView(position)
+ 
+  return null
+}
+
+const curitibaCordenadas = { latitude: '-25.438611111089152', longitude: '-49.260972203972706' }
+
 const AppLayout = () => {
-const trips = useLoaderData()
+  const trips = useLoaderData()
+  const [searchParams] = useSearchParams()
+
+  const latitude = searchParams.get('latitude')
+  const longitude = searchParams.get('longitude')
+ 
 
   return (
     <main className="main-app-layout">
@@ -136,7 +150,22 @@ const trips = useLoaderData()
         <Outlet context={trips} />
       </aside>
       <div className="map">
-        <h1>map</h1>
+        <MapContainer className="map-container" center={[curitibaCordenadas.latitude, curitibaCordenadas.longitude]} zoom={13} scrollWheelZoom={true}>
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          {trips.map(citie => (
+            <Marker key={citie.id} position={[citie.position.latitude, citie.position.longitude]}>
+              <Popup>
+               {citie.notes}
+              </Popup>
+            </Marker>
+          ))}
+
+          {latitude && longitude && <MapInstance position={[latitude,longitude]} />}
+
+        </MapContainer>
       </div>
     </main>
   )
@@ -144,11 +173,11 @@ const trips = useLoaderData()
 
 const Cities = () => {
   const trips = useOutletContext()
-  
+
   return (
     <div className="cities">
       {trips.map((trip) =>
-        <Link key={trip.id} to={`${trip.id}`}>
+        <Link key={trip.id} to={`${trip.id}?latitude=${trip.position.latitude}&longitude=${trip.position.longitude}`}>
           <h3>{trip.name}</h3>
           <button>x</button>
         </Link>
@@ -157,13 +186,14 @@ const Cities = () => {
   )
 }
 
-const CitiesDetails = ({ travels }) => {
+const CitiesDetails = () => {
   const trips = useOutletContext()
   const params = useParams()
   const navigate = useNavigate()
   const cityDetails = trips.find(city => String(city.id) === params.id)
-
-  const handleBackBtn = () => navigate(-1)
+  
+  const handleBackBtn = () => navigate('/app/cidades')
+  
 
   return cityDetails && (
     <div className="city-details">
