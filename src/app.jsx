@@ -222,24 +222,42 @@ const CitiesDetails = () => {
 
 }
 
+const formLoader = async ({ request }) => {
+  const url = new URL(request.url)
+  const latitude = url.searchParams.get('latitude')
+  const longitude = url.searchParams.get('longitude')
+  const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client/?latitude=${latitude}&longitude=${longitude}&localityLanguage=pt-BR`)
+  const data = await response.json()
+
+  console.log({ name: data.city, country: data.countryName })
+  
+  return { name: data.city, country: data.countryName }
+}
+
+
 const FormTrip = () => {
+  const navigate = useNavigate()
+  const city = useLoaderData()
+
+  const handleBackBtn = () => navigate('/app/cidades')
+
   return (
     <form className="form-edit-city">
       <label>
         <span>Nome da cidade</span>
-        <input type="text" />
+        <input key={city.name} type="text" defaultValue={city.name} required/>
       </label>
       <label>
-        <span>Quando você foi para [CIDADE]</span>
-        <input type="date" />
+        <span>Quando você foi para {city.name}</span>
+        <input type="date" required/>
       </label>
       <label>
         <span>Suas anotações sobre a cidade</span>
-        <textarea />
+        <textarea  required />
       </label>
       <div className="form-buttons">
-        <button className="btn-back ">&larr; Voltar</button>
-        <button className="btn-save">Salvar</button>
+        <button className="btn-back" type="button" onClick={handleBackBtn}>&larr; Voltar</button>
+        <button className="btn-save" type="button" >Salvar</button>
       </div>
     </form>
   )
@@ -282,7 +300,7 @@ const App = () => {
           <Route index element={<Navigate to="cidades" replace />} />
           <Route path="cidades" element={<Cities />} />
           <Route path="cidades/:id" element={<CitiesDetails />} />
-          <Route path="form" element={<FormTrip />} />
+          <Route path="form" element={<FormTrip />} loader={formLoader} />
           <Route path="paises" element={<Countries />} />
         </Route>
         <Route path="*" element={<NotFound />} />
