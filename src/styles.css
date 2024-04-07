@@ -106,7 +106,7 @@ main {
 }
 
 .nav a.active {
-  color: var(--color-primary) !important;
+  color: var(--color-primary);
 }
 
 .main-pricing,

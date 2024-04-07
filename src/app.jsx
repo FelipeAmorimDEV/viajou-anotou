@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { RouterProvider, useParams, createBrowserRouter, createRoutesFromElements, Route, NavLink, Link, useLocation, Outlet } from "react-router-dom"
+import { RouterProvider, useParams, createBrowserRouter, createRoutesFromElements, Route, NavLink, Link, useLocation, Outlet, Navigate } from "react-router-dom"
 
 const Header = () => {
   const location = useLocation()
@@ -7,27 +7,31 @@ const Header = () => {
   const links = [
     { path: '/', text: 'Início' },
     { path: '/sobre', text: 'Sobre' },
-    { path: '/preco', text: 'Preço' }
+    { path: '/preco', text: 'Preço' },
+    { path: '/login', text: 'Login' }
   ]
-  const isDarkTheme = location.pathname !== '/'
+  const isNotHomePage = location.pathname !== '/'
 
   return (
     <header>
       <nav className="nav">
-        <Link to="/"><img src={`/logo-viajou-anotou-${isDarkTheme ? 'dark' : 'light'}.png`} alt="Logo Viajou Anotou" className="logo" /></Link>
+        <Link to="/"><img src={`/logo-viajou-anotou-${isNotHomePage ? 'dark' : 'light'}.png`} alt="Logo Viajou Anotou" className="logo" /></Link>
         <ul>
-          {links.map(link => (
-            <li key={link.path}>
-              <NavLink
-                to={link.path}
-                style={{ color: isDarkTheme ? '#c2c2c2' : null }}>
-                {link.text}
-              </NavLink>
-            </li>
-          ))}
-          <li>
-            <Link to="/login" className="cta">Login</Link>
-          </li>
+          {links.map(link => {
+            const isLoginBtn = link.path === '/login'
+            const shouldBeGray = isNotHomePage && location.pathname !== link.path && !isLoginBtn
+            return (
+              <li key={link.path}>
+                <NavLink
+                  to={link.path}
+                  style={shouldBeGray  ? {color: '#c2c2c2'} : isLoginBtn ? { color: '#fff' } : null}
+                  className={isLoginBtn ? 'cta' : ''}
+                >
+                  {link.text}
+                </NavLink>
+              </li>
+            )
+          })}
         </ul>
       </nav>
     </header>
@@ -108,7 +112,7 @@ const LogIn = () => {
 const AppLayout = () =>
   <main className="main-app-layout">
     <aside className="sidebar">
-    <Link to="/"><img src={`/logo-viajou-anotou-dark.png`} alt="Logo Viajou Anotou" className="logo" /></Link>
+      <Link to="/"><img src={`/logo-viajou-anotou-dark.png`} alt="Logo Viajou Anotou" className="logo" /></Link>
       <nav className="nav-app-layout">
         <ul>
           <li><NavLink to="cidades">Cidades</NavLink></li>
@@ -154,12 +158,11 @@ const CitiesDetails = ({ travels }) => {
 }
 
 const Countries = ({ travels }) => {
-  const onlyOneCountryInList = travels
-    .reduce((acc, item) => acc.includes(item.country) ? [...acc] : [...acc, item.country], [])
+  const uniqueVisitedCountries = travels.reduce((acc, item) => acc.includes(item.country) ? [...acc] : [...acc, item.country], [])
 
   return (
     <ul className="countries">
-      {onlyOneCountryInList.map((country) => <li key={country}>{country}</li>)}
+      {uniqueVisitedCountries.map((country) => <li key={country}>{country}</li>)}
     </ul>
   )
 }
@@ -197,6 +200,7 @@ const App = () => {
         <Route path="/preco" element={<Preco />} />
         <Route path="/login" element={<LogIn />} />
         <Route path="/app" element={<AppLayout />}>
+          <Route index element={<Navigate to="cidades" replace />} />
           <Route path="cidades" element={<Cities travels={travels} />} />
           <Route path="cidades/:id" element={<CitiesDetails travels={travels} />} />
           <Route path="paises" element={<Countries travels={travels} />} />
