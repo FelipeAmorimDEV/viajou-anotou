@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react"
 import { RouterProvider, useParams, createBrowserRouter, createRoutesFromElements, Route, NavLink, Link, useLocation, Outlet, Navigate } from "react-router-dom"
 
+
+const Logo = ({ variant = 'dark' }) =>
+  <header>
+    <Link to="/">
+      <img src={`/logo-viajou-anotou-${variant}.png`} alt="Logo Viajou Anotou" className="logo" />
+    </Link>
+  </header>
+
 const Header = () => {
   const location = useLocation()
 
@@ -13,9 +21,8 @@ const Header = () => {
   const isNotHomePage = location.pathname !== '/'
 
   return (
-    <header>
       <nav className="nav">
-        <Link to="/"><img src={`/logo-viajou-anotou-${isNotHomePage ? 'dark' : 'light'}.png`} alt="Logo Viajou Anotou" className="logo" /></Link>
+        <Logo variant={isNotHomePage ? 'dark' : 'light'}/>
         <ul>
           {links.map(link => {
             const isLoginBtn = link.path === '/login'
@@ -24,7 +31,7 @@ const Header = () => {
               <li key={link.path}>
                 <NavLink
                   to={link.path}
-                  style={shouldBeGray  ? {color: '#c2c2c2'} : isLoginBtn ? { color: '#fff' } : null}
+                  style={shouldBeGray ? { color: '#c2c2c2' } : isLoginBtn ? { color: '#fff' } : null}
                   className={isLoginBtn ? 'cta' : ''}
                 >
                   {link.text}
@@ -34,7 +41,6 @@ const Header = () => {
           })}
         </ul>
       </nav>
-    </header>
   )
 }
 
