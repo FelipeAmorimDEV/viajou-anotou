@@ -1,4 +1,4 @@
-import { RouterProvider, useParams, createBrowserRouter, createRoutesFromElements, Route, NavLink, Link, useLocation, Outlet, Navigate, useNavigate, useLoaderData, useOutletContext, useSearchParams } from "react-router-dom"
+import { RouterProvider, useParams, createBrowserRouter, createRoutesFromElements, Route, NavLink, Link, useLocation, Outlet, Navigate, Form, useNavigate, useLoaderData, useOutletContext, useSearchParams, redirect } from "react-router-dom"
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvent } from 'react-leaflet'
 import { useState } from "react"
 import localforage from "localforage"
@@ -204,9 +204,7 @@ const CitiesDetails = () => {
   const params = useParams()
   const navigate = useNavigate()
   const cityDetails = trips.find(city => String(city.id) === params.id)
-
   const handleBackBtn = () => navigate('/app/cidades')
-
 
   return cityDetails && (
     <div className="city-details">
@@ -222,6 +220,23 @@ const CitiesDetails = () => {
 
 }
 
+const formAction = async ({request}) => {
+  const url = new URL(request.url)
+  const latitude = url.searchParams.get('latitude')
+  const longitude = url.searchParams.get('longitude')
+  const geoResponse = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client/?latitude=${latitude}&longitude=${longitude}&localityLanguage=pt-BR`)
+  const { countryName } = await geoResponse.json()
+  const formResponse = await request.formData()
+  const { name, notes, date } = Object.fromEntries(formResponse)
+ 
+  const city = { name, notes, date, id: crypto.randomUUID(), position: {latitude, longitude}, country: countryName}
+  
+  const prevCities = await localforage.getItem('cities')
+  localforage.setItem('cities', prevCities ? [...prevCities, city] : [])
+
+  return redirect(`/app/cidades/${city.id}`)
+}
+
 const formLoader = async ({ request }) => {
   const url = new URL(request.url)
   const latitude = url.searchParams.get('latitude')
@@ -229,8 +244,6 @@ const formLoader = async ({ request }) => {
   const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client/?latitude=${latitude}&longitude=${longitude}&localityLanguage=pt-BR`)
   const data = await response.json()
 
-  console.log({ name: data.city, country: data.countryName })
-  
   return { name: data.city, country: data.countryName }
 }
 
@@ -242,24 +255,24 @@ const FormTrip = () => {
   const handleBackBtn = () => navigate('/app/cidades')
 
   return (
-    <form className="form-edit-city">
+    <Form className="form-edit-city" method="post">
       <label>
         <span>Nome da cidade</span>
-        <input key={city.name} type="text" defaultValue={city.name} required/>
+        <input key={city.name} type="text" defaultValue={city.name} name="name" required/>
       </label>
       <label>
         <span>Quando você foi para {city.name}</span>
-        <input type="date" required/>
+        <input type="date" name="date" required/>
       </label>
       <label>
         <span>Suas anotações sobre a cidade</span>
-        <textarea  required />
+        <textarea  name="notes" required />
       </label>
       <div className="form-buttons">
         <button className="btn-back" type="button" onClick={handleBackBtn}>&larr; Voltar</button>
-        <button className="btn-save" type="button" >Salvar</button>
+        <button className="btn-save">Salvar</button>
       </div>
-    </form>
+    </Form>
   )
 }
 
@@ -300,7 +313,7 @@ const App = () => {
           <Route index element={<Navigate to="cidades" replace />} />
           <Route path="cidades" element={<Cities />} />
           <Route path="cidades/:id" element={<CitiesDetails />} />
-          <Route path="form" element={<FormTrip />} loader={formLoader} />
+          <Route path="form" element={<FormTrip />} loader={formLoader} action={formAction}/>
           <Route path="paises" element={<Countries />} />
         </Route>
         <Route path="*" element={<NotFound />} />
