@@ -190,7 +190,6 @@ const Cities = () => {
         {trips.map((trip) =>
           <Link key={trip.id} to={`${trip.id}?latitude=${trip.position.latitude}&longitude=${trip.position.longitude}`}>
             <h3>{trip.name}</h3>
-            <button>x</button>
           </Link>
         )}
       </div>
@@ -209,18 +208,30 @@ const CitiesDetails = () => {
   return cityDetails && (
     <div className="city-details">
       <div className="row">
-        <h5>Nome da cidade</h5>
-        <h3>{cityDetails.name}</h3>
-        <h5>Suas anotações</h5>
-        <p>{cityDetails.notes}</p>
-        <button className="btn-back" onClick={handleBackBtn}>&larr; Voltar</button>
+        <div>
+          <h5>Nome da cidade</h5>
+          <h3>{cityDetails.name}</h3>
+        </div>
+        <div>
+          <h5>Quando você foi para {cityDetails.name}</h5>
+          <p>{cityDetails.date}</p>
+        </div>
+        <div>
+          <h5>Suas anotações</h5>
+          <p>{cityDetails.notes}</p>
+        </div>
+        <div className="citydetails-btns">
+          <button className="btn-back" onClick={handleBackBtn}>&larr; Voltar</button>
+          <button className="btn-edit" onClick={handleBackBtn}>∴ Editar</button>
+          <button className="btn-delete" onClick={handleBackBtn}>× Deletar</button>
+        </div>
       </div>
     </div>
   )
 
 }
 
-const formAction = async ({request}) => {
+const formAction = async ({ request }) => {
   const url = new URL(request.url)
   const latitude = url.searchParams.get('latitude')
   const longitude = url.searchParams.get('longitude')
@@ -228,9 +239,9 @@ const formAction = async ({request}) => {
   const { countryName } = await geoResponse.json()
   const formResponse = await request.formData()
   const { name, notes, date } = Object.fromEntries(formResponse)
- 
-  const city = { name, notes, date, id: crypto.randomUUID(), position: {latitude, longitude}, country: countryName}
-  
+
+  const city = { name, notes, date, id: crypto.randomUUID(), position: { latitude, longitude }, country: countryName }
+
   const prevCities = await localforage.getItem('cities')
   localforage.setItem('cities', prevCities ? [...prevCities, city] : [])
 
@@ -258,15 +269,15 @@ const FormTrip = () => {
     <Form className="form-edit-city" method="post">
       <label>
         <span>Nome da cidade</span>
-        <input key={city.name} type="text" defaultValue={city.name} name="name" required/>
+        <input key={city.name} type="text" defaultValue={city.name} name="name" required />
       </label>
       <label>
         <span>Quando você foi para {city.name}</span>
-        <input type="date" name="date" required/>
+        <input type="date" name="date" required />
       </label>
       <label>
         <span>Suas anotações sobre a cidade</span>
-        <textarea  name="notes" required />
+        <textarea name="notes" required />
       </label>
       <div className="form-buttons">
         <button className="btn-back" type="button" onClick={handleBackBtn}>&larr; Voltar</button>
@@ -313,7 +324,7 @@ const App = () => {
           <Route index element={<Navigate to="cidades" replace />} />
           <Route path="cidades" element={<Cities />} />
           <Route path="cidades/:id" element={<CitiesDetails />} />
-          <Route path="form" element={<FormTrip />} loader={formLoader} action={formAction}/>
+          <Route path="form" element={<FormTrip />} loader={formLoader} action={formAction} />
           <Route path="paises" element={<Countries />} />
         </Route>
         <Route path="*" element={<NotFound />} />
