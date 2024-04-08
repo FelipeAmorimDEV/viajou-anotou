@@ -198,13 +198,22 @@ const Cities = () => {
 
 }
 
+const deleteTrip = async ({params}) => {
+  const trips = await localforage.getItem('cities')
+  
+  if (window.confirm('Por favor, confirme que você quer deletar essa viagem.')){
+    await localforage.setItem('cities', trips.filter(trip => trip.id !== params.id))
+    return redirect('/app/cidades')
+  }
+  return redirect(`/app/cidades/${params.id}`)
+}
+
 const CitiesDetails = () => {
   const trips = useOutletContext()
   const params = useParams()
   const navigate = useNavigate()
   const cityDetails = trips.find(city => String(city.id) === params.id)
   const handleBackBtn = () => navigate('/app/cidades')
-
   return cityDetails && (
     <div className="city-details">
       <div className="row">
@@ -223,7 +232,9 @@ const CitiesDetails = () => {
         <div className="citydetails-btns">
           <button className="btn-back" onClick={handleBackBtn}>&larr; Voltar</button>
           <button className="btn-edit" onClick={handleBackBtn}>∴ Editar</button>
-          <button className="btn-delete" onClick={handleBackBtn}>× Deletar</button>
+          <Form action="delete" method="post">
+            <button className="btn-delete">× Deletar</button>
+          </Form>
         </div>
       </div>
     </div>
@@ -243,7 +254,7 @@ const formAction = async ({ request }) => {
   const city = { name, notes, date, id: crypto.randomUUID(), position: { latitude, longitude }, country: countryName }
 
   const prevCities = await localforage.getItem('cities')
-  localforage.setItem('cities', prevCities ? [...prevCities, city] : [])
+  localforage.setItem('cities', prevCities ? [...prevCities, city] : [city])
 
   return redirect(`/app/cidades/${city.id}`)
 }
@@ -324,6 +335,7 @@ const App = () => {
           <Route index element={<Navigate to="cidades" replace />} />
           <Route path="cidades" element={<Cities />} />
           <Route path="cidades/:id" element={<CitiesDetails />} />
+          <Route path="cidades/:id/delete" action={deleteTrip} />
           <Route path="form" element={<FormTrip />} loader={formLoader} action={formAction} />
           <Route path="paises" element={<Countries />} />
         </Route>
