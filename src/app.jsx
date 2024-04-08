@@ -1,4 +1,4 @@
-import { RouterProvider, useParams, createBrowserRouter, createRoutesFromElements, Route, NavLink, Link, useLocation, Outlet, Navigate, Form, useNavigate, useLoaderData, useOutletContext, useSearchParams, redirect } from "react-router-dom"
+import { RouterProvider, useParams, createBrowserRouter, createRoutesFromElements, Route, NavLink, Link, useLocation, Outlet, Navigate, Form, useNavigate, useLoaderData, useOutletContext, useSearchParams, redirect, useActionData } from "react-router-dom"
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvent } from 'react-leaflet'
 import { useState } from "react"
 import localforage from "localforage"
@@ -214,6 +214,7 @@ const CitiesDetails = () => {
   const navigate = useNavigate()
   const cityDetails = trips.find(city => String(city.id) === params.id)
   const handleBackBtn = () => navigate('/app/cidades')
+  const handleEditBtn = () => navigate(`/app/cidades/${params.id}/edit`)
   return cityDetails && (
     <div className="city-details">
       <div className="row">
@@ -231,7 +232,9 @@ const CitiesDetails = () => {
         </div>
         <div className="citydetails-btns">
           <button className="btn-back" onClick={handleBackBtn}>&larr; Voltar</button>
-          <button className="btn-edit" onClick={handleBackBtn}>∴ Editar</button>
+          
+          <button className="btn-edit" onClick={handleEditBtn}>∴ Editar</button>
+         
           <Form action="delete" method="post">
             <button className="btn-delete">× Deletar</button>
           </Form>
@@ -240,6 +243,16 @@ const CitiesDetails = () => {
     </div>
   )
 
+}
+
+const editAction = async ({params,request}) => {
+  const cities = await localforage.getItem('cities')
+  const cityToEdit = cities.find(city => city.id === params.id)
+  const formResponse = await request.formData()
+  const { name, notes, date } = Object.fromEntries(formResponse)
+  await localforage.setItem('cities', cities.map(city => city.id === params.id ? {...city, name, notes, date} : city))
+  
+  return redirect(`/app/cidades/${params.id}`)
 }
 
 const formAction = async ({ request }) => {
@@ -269,11 +282,16 @@ const formLoader = async ({ request }) => {
   return { name: data.city, country: data.countryName }
 }
 
+const editLoader = async ({params}) => {
+  const cities = await localforage.getItem('cities')
+
+  return cities.find(city => city.id === params.id)
+}
 
 const FormTrip = () => {
   const navigate = useNavigate()
   const city = useLoaderData()
-
+ 
   const handleBackBtn = () => navigate('/app/cidades')
 
   return (
@@ -284,11 +302,11 @@ const FormTrip = () => {
       </label>
       <label>
         <span>Quando você foi para {city.name}</span>
-        <input type="date" name="date" required />
+        <input type="date" name="date" defaultValue={city.date ?? ''} required />
       </label>
       <label>
         <span>Suas anotações sobre a cidade</span>
-        <textarea name="notes" required />
+        <textarea name="notes" defaultValue={city.notes ?? ''} required />
       </label>
       <div className="form-buttons">
         <button className="btn-back" type="button" onClick={handleBackBtn}>&larr; Voltar</button>
@@ -336,6 +354,7 @@ const App = () => {
           <Route path="cidades" element={<Cities />} />
           <Route path="cidades/:id" element={<CitiesDetails />} />
           <Route path="cidades/:id/delete" action={deleteTrip} />
+          <Route path="cidades/:id/edit" element={<FormTrip />} loader={editLoader} action={editAction}/>
           <Route path="form" element={<FormTrip />} loader={formLoader} action={formAction} />
           <Route path="paises" element={<Countries />} />
         </Route>
