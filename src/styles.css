@@ -298,12 +298,19 @@ main {
 .countries li {
   text-align: center;
   gap: .2rem;
-  font-size: 1.7rem;
+  font-size: 1.8rem;
   font-weight: 600;
   background-color: var(--color-light-2);
   border-radius: 7px;
   padding: 1.2rem 2rem;
   border-left: 5px solid var(--color-primary);
+}
+
+.countries li {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: .5rem;
 }
 
 .city-details {
@@ -358,6 +365,22 @@ main {
 
 .form-edit-city .buttons {
   justify-content: space-between;
+}
+
+.city-content{
+  position: relative;
+}
+
+.flag-content  {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+}
+.country-flag {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .city-details button,

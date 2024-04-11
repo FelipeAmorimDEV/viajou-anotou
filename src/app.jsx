@@ -202,6 +202,12 @@ const CitiesList = () => {
       <div className="cities">
         {trips.map((trip) =>
           <Link key={trip.id} to={`${trip.id}?latitude=${trip.position.latitude}&longitude=${trip.position.longitude}`}>
+            <img
+              src={`https://flagcdn.com/20x15/${trip.countryCode}.png`}
+              srcSet={`https://flagcdn.com/40x30/${trip.countryCode}.png 2x, https://flagcdn.com/60x45/${trip.countryCode}.png 3x`}
+              width="20"
+              height="15"
+              alt={trip.country} />
             <h3>{trip.name}</h3>
           </Link>
         )}
@@ -248,7 +254,15 @@ const CityDetails = () => {
       <div className="row">
         <div>
           <h5>Nome da cidade</h5>
-          <h3>{cityDetails.name}</h3>
+          <div className="flag-content">
+            <img
+              src={`https://flagcdn.com/20x15/${cityDetails.countryCode}.png`}
+              srcSet={`https://flagcdn.com/40x30/${cityDetails.countryCode}.png 2x, https://flagcdn.com/60x45/${cityDetails.countryCode}.png 3x`}
+              width="20"
+              height="15"
+              alt={cityDetails.country} />
+            <h3>{cityDetails.name}</h3>
+          </div>
         </div>
         <div>
           <h5>Quando você foi para {cityDetails.name}</h5>
@@ -278,11 +292,11 @@ const submitTripFormAction = async ({ request }) => {
   const latitude = url.searchParams.get('latitude')
   const longitude = url.searchParams.get('longitude')
   const geoResponse = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client/?latitude=${latitude}&longitude=${longitude}&localityLanguage=pt-BR`)
-  const { countryName } = await geoResponse.json()
+  const { countryName, countryCode } = await geoResponse.json()
   const formResponse = await request.formData()
   const { name, notes, date } = Object.fromEntries(formResponse)
 
-  const city = { name, notes, date, id: crypto.randomUUID(), position: { latitude, longitude }, country: countryName }
+  const city = { name, notes, date, id: crypto.randomUUID(), position: { latitude, longitude }, country: countryName, countryCode: countryCode.toLowerCase() }
 
   const prevCities = await localforage.getItem('cities')
   localforage.setItem('cities', prevCities ? [...prevCities, city] : [city])
@@ -296,8 +310,9 @@ const loadFormInitialData = async ({ request }) => {
   const longitude = url.searchParams.get('longitude')
   const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client/?latitude=${latitude}&longitude=${longitude}&localityLanguage=pt-BR`)
   const data = await response.json()
+  console.log(data)
 
-  return { name: data.city, country: data.countryName }
+  return { name: data.city, country: data.countryName, countryCode: data.countryCode.toLowerCase() }
 }
 
 const TripForm = () => {
@@ -306,9 +321,18 @@ const TripForm = () => {
   const handleBackBtn = () => navigate('/app/cidades')
   return (
     <Form className="form-edit-city" method="post">
-      <label>
+      <label >
         <span>Nome da cidade</span>
-        <input key={city.name} type="text" defaultValue={city.name} name="name" required />
+        <div className="city-content">
+          <input key={city.name} type="text" defaultValue={city.name} name="name" required />
+          <img
+            className="country-flag"
+            src={`https://flagcdn.com/20x15/${city.countryCode}.png`}
+            srcSet={`https://flagcdn.com/40x30/${city.countryCode}.png 2x, https://flagcdn.com/60x45/${city.countryCode}.png 3x`}
+            width="20"
+            height="15"
+            alt={city.country} />
+        </div>
       </label>
       <label>
         <span>Quando você foi para {city.name}</span>
@@ -328,11 +352,21 @@ const TripForm = () => {
 
 const VisitedCountries = () => {
   const trips = useOutletContext()
-  const uniqueVisitedCountries = trips.reduce((acc, item) => acc.includes(item.country) ? [...acc] : [...acc, item.country], [])
+  const uniqueVisitedCountries = trips.reduce((acc, item) => acc.includes(item.country) ? [...acc] : [...acc, {countryName: item.country, countryCode: item.countryCode}], [])
 
   return (
     <ul className="countries">
-      {uniqueVisitedCountries.map((country) => <li key={country}>{country}</li>)}
+      {uniqueVisitedCountries.map(({ countryName, countryCode }) =>
+        <li key={countryName}>
+          <img
+            src={`https://flagcdn.com/32x24/${countryCode}.png`}
+            srcSet={`https://flagcdn.com/64x48/${countryCode}.png 2x, https://flagcdn.com/96x72/${countryCode}.png 3x`}
+            width="28"
+            height="21"
+            alt={countryName} />
+          {countryName}
+        </li>
+      )}
     </ul>
   )
 }
