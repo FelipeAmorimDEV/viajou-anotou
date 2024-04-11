@@ -1,33 +1,32 @@
-import { RouterProvider, useParams, createBrowserRouter, createRoutesFromElements, Route, NavLink, Link, useLocation, Outlet, Navigate, Form, useNavigate, useLoaderData, useOutletContext, useSearchParams, redirect, useActionData } from "react-router-dom"
+import { RouterProvider, useParams, createBrowserRouter, createRoutesFromElements, Route, NavLink, Link, useLocation, Outlet, Navigate, Form, useNavigate, useLoaderData, useOutletContext, useSearchParams, redirect, useRouteError } from "react-router-dom"
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvent } from 'react-leaflet'
-import { useState } from "react"
 import localforage from "localforage"
 
-const Logo = ({ variant = 'dark' }) =>
+const HeaderLogo = ({ variant = 'dark' }) =>
   <header>
     <Link to="/">
       <img src={`/logo-viajou-anotou-${variant}.png`} alt="Logo Viajou Anotou" className="logo" />
     </Link>
   </header>
 
-const Header = () => {
+const Navigation = () => {
   const location = useLocation()
 
-  const links = [
+  const navigationLinks = [
     { path: '/', text: 'Início' },
     { path: '/sobre', text: 'Sobre' },
     { path: '/preco', text: 'Preço' },
     { path: '/login', text: 'Login' }
   ]
-  const isNotHomePage = location.pathname !== '/'
+  const isNotMainPage = location.pathname !== '/'
 
   return (
     <nav className="nav">
-      <Logo variant={isNotHomePage ? 'dark' : 'light'} />
+      <HeaderLogo variant={isNotMainPage ? 'dark' : 'light'} />
       <ul>
-        {links.map(link => {
+        {navigationLinks.map(link => {
           const isLoginBtn = link.path === '/login'
-          const shouldBeGray = isNotHomePage && location.pathname !== link.path && !isLoginBtn
+          const shouldBeGray = isNotMainPage && location.pathname !== link.path && !isLoginBtn
           return (
             <li key={link.path}>
               <NavLink
@@ -45,10 +44,10 @@ const Header = () => {
   )
 }
 
-const Home = () => {
+const HomePage = () => {
   return (
     <>
-      <Header />
+      <Navigation />
       <main className="main-home">
         <section>
           <h1>Você viaja o mundo. <br />E o ViajouAnotou mantém suas aventuras anotadas.</h1>
@@ -60,10 +59,10 @@ const Home = () => {
   )
 }
 
-const Sobre = () => {
+const AboutPage = () => {
   return (
     <>
-      <Header />
+      <Navigation />
       <main className="main-about">
         <section>
           <div>
@@ -78,10 +77,10 @@ const Sobre = () => {
   )
 }
 
-const Preco = () => {
+const PricePage = () => {
   return (
     <>
-      <Header />
+      <Navigation />
       <main className="main-pricing">
         <section>
           <div>
@@ -95,10 +94,10 @@ const Preco = () => {
   )
 }
 
-const LogIn = () => {
+const LoginPage = () => {
   return (
     <>
-      <Header />
+      <Navigation />
       <main className="main-login">
         <form className="form-login" onSubmit={(e) => e.preventDefault()}>
           <label>
@@ -116,9 +115,18 @@ const LogIn = () => {
   )
 }
 
-const tripsLoader = async () => {
-  const cities = await localforage.getItem('cities')
-  return cities ?? []
+const NotFoundPage = () => {
+  return (
+    <>
+      <Navigation />
+      <main className="main-notfound">
+        <section>
+          <h1>Página não encontrada</h1>
+          <p>Volte para a <Link to="/">página inicial</Link></p>
+        </section>
+      </main>
+    </>
+  )
 }
 
 const ChangeCenter = ({ position }) => {
@@ -135,9 +143,14 @@ const ClickToCity = () => {
   })
 }
 
-const curitibaCordenadas = { latitude: '-25.438611111089152', longitude: '-49.260972203972706' }
+const curitibaCoordinates = { latitude: '-25.438611111089152', longitude: '-49.260972203972706' }
 
-const AppLayout = () => {
+const loadTrips = async () => {
+  const cities = await localforage.getItem('cities')
+  return cities ?? []
+}
+
+const DashboardLayout = () => {
   const trips = useLoaderData()
   const [searchParams] = useSearchParams()
 
@@ -158,7 +171,7 @@ const AppLayout = () => {
         <Outlet context={trips} />
       </aside>
       <div className="map">
-        <MapContainer className="map-container" center={[curitibaCordenadas.latitude, curitibaCordenadas.longitude]} zoom={13} scrollWheelZoom={true}>
+        <MapContainer className="map-container" center={[curitibaCoordinates.latitude, curitibaCoordinates.longitude]} zoom={13} scrollWheelZoom={true}>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -180,7 +193,7 @@ const AppLayout = () => {
   )
 }
 
-const Cities = () => {
+const CitiesList = () => {
   const trips = useOutletContext()
 
   return trips.length === 0
@@ -194,27 +207,42 @@ const Cities = () => {
         )}
       </div>
     )
-
-
 }
 
-const deleteTrip = async ({params}) => {
+const removeTripAction = async ({ params }) => {
   const trips = await localforage.getItem('cities')
-  
-  if (window.confirm('Por favor, confirme que você quer deletar essa viagem.')){
+
+  if (window.confirm('Por favor, confirme que você quer deletar essa viagem.')) {
     await localforage.setItem('cities', trips.filter(trip => trip.id !== params.id))
     return redirect('/app/cidades')
   }
   return redirect(`/app/cidades/${params.id}`)
 }
 
-const CitiesDetails = () => {
+const updateTripAction = async ({ params, request }) => {
+  const cities = await localforage.getItem('cities')
+  const formResponse = await request.formData()
+  const { name, notes, date } = Object.fromEntries(formResponse)
+  await localforage.setItem('cities', cities.map(city => city.id === params.id ? { ...city, name, notes, date } : city))
+
+  return redirect(`/app/cidades/${params.id}`)
+}
+
+const loadTripDetails = async ({ params }) => {
+  const cities = await localforage.getItem('cities')
+
+  return cities.find(city => city.id === params.id)
+}
+
+const CityDetails = () => {
   const trips = useOutletContext()
   const params = useParams()
   const navigate = useNavigate()
   const cityDetails = trips.find(city => String(city.id) === params.id)
+
   const handleBackBtn = () => navigate('/app/cidades')
   const handleEditBtn = () => navigate(`/app/cidades/${params.id}/edit`)
+
   return cityDetails && (
     <div className="city-details">
       <div className="row">
@@ -232,9 +260,9 @@ const CitiesDetails = () => {
         </div>
         <div className="citydetails-btns">
           <button className="btn-back" onClick={handleBackBtn}>&larr; Voltar</button>
-          
+
           <button className="btn-edit" onClick={handleEditBtn}>∴ Editar</button>
-         
+
           <Form action="delete" method="post">
             <button className="btn-delete">× Deletar</button>
           </Form>
@@ -245,17 +273,7 @@ const CitiesDetails = () => {
 
 }
 
-const editAction = async ({params,request}) => {
-  const cities = await localforage.getItem('cities')
-  const cityToEdit = cities.find(city => city.id === params.id)
-  const formResponse = await request.formData()
-  const { name, notes, date } = Object.fromEntries(formResponse)
-  await localforage.setItem('cities', cities.map(city => city.id === params.id ? {...city, name, notes, date} : city))
-  
-  return redirect(`/app/cidades/${params.id}`)
-}
-
-const formAction = async ({ request }) => {
+const submitTripFormAction = async ({ request }) => {
   const url = new URL(request.url)
   const latitude = url.searchParams.get('latitude')
   const longitude = url.searchParams.get('longitude')
@@ -272,7 +290,7 @@ const formAction = async ({ request }) => {
   return redirect(`/app/cidades/${city.id}`)
 }
 
-const formLoader = async ({ request }) => {
+const loadFormInitialData = async ({ request }) => {
   const url = new URL(request.url)
   const latitude = url.searchParams.get('latitude')
   const longitude = url.searchParams.get('longitude')
@@ -282,18 +300,10 @@ const formLoader = async ({ request }) => {
   return { name: data.city, country: data.countryName }
 }
 
-const editLoader = async ({params}) => {
-  const cities = await localforage.getItem('cities')
-
-  return cities.find(city => city.id === params.id)
-}
-
-const FormTrip = () => {
+const TripForm = () => {
   const navigate = useNavigate()
   const city = useLoaderData()
- 
   const handleBackBtn = () => navigate('/app/cidades')
-
   return (
     <Form className="form-edit-city" method="post">
       <label>
@@ -316,7 +326,7 @@ const FormTrip = () => {
   )
 }
 
-const Countries = () => {
+const VisitedCountries = () => {
   const trips = useOutletContext()
   const uniqueVisitedCountries = trips.reduce((acc, item) => acc.includes(item.country) ? [...acc] : [...acc, item.country], [])
 
@@ -327,38 +337,26 @@ const Countries = () => {
   )
 }
 
-const NotFound = () => {
-  return (
-    <>
-      <Header />
-      <main className="main-notfound">
-        <section>
-          <h1>Página não encontrada</h1>
-          <p>Volte para a <Link to="/">página inicial</Link></p>
-        </section>
-      </main>
-    </>
-  )
-}
+
 
 const App = () => {
   const router = createBrowserRouter(
     createRoutesFromElements(
       <Route path="/">
-        <Route index element={<Home />} />
-        <Route path="sobre" element={<Sobre />} />
-        <Route path="preco" element={<Preco />} />
-        <Route path="login" element={<LogIn />} />
-        <Route path="app" element={<AppLayout />} loader={tripsLoader}>
+        <Route index element={<HomePage />} />
+        <Route path="sobre" element={<AboutPage />} />
+        <Route path="preco" element={<PricePage />} />
+        <Route path="login" element={<LoginPage />} />
+        <Route path="app" element={<DashboardLayout />} loader={loadTrips}>
           <Route index element={<Navigate to="cidades" replace />} />
-          <Route path="cidades" element={<Cities />} />
-          <Route path="cidades/:id" element={<CitiesDetails />} />
-          <Route path="cidades/:id/delete" action={deleteTrip} />
-          <Route path="cidades/:id/edit" element={<FormTrip />} loader={editLoader} action={editAction}/>
-          <Route path="form" element={<FormTrip />} loader={formLoader} action={formAction} />
-          <Route path="paises" element={<Countries />} />
+          <Route path="cidades" element={<CitiesList />} />
+          <Route path="cidades/:id" element={<CityDetails />} />
+          <Route path="cidades/:id/delete" action={removeTripAction} />
+          <Route path="cidades/:id/edit" element={<TripForm />} loader={loadTripDetails} action={updateTripAction} />
+          <Route path="form" element={<TripForm />} loader={loadFormInitialData} action={submitTripFormAction} />
+          <Route path="paises" element={<VisitedCountries />} />
         </Route>
-        <Route path="*" element={<NotFound />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
     )
   )

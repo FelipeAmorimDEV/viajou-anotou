@@ -321,7 +321,13 @@ main {
 .city-details .row {
   display: flex;
   flex-direction: column;
-  gap: .5rem;
+  gap: 2rem;
+}
+
+.citydetails-btns {
+  align-self: flex-end;
+  display: flex;
+  gap: 1rem;
 }
 
 .city-details h5 {
@@ -383,6 +389,11 @@ main {
 .btn-save {
   color: var(--color-primary);
   border: 1px solid var(--color-primary);
+}
+
+.form-buttons{
+  display: flex;
+  justify-content: space-between;
 }
 
 .map-container {
