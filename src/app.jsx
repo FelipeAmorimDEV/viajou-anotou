@@ -337,12 +337,26 @@ const VisitedCountries = () => {
   )
 }
 
-
+const ErroPage = () => {
+  const error = useRouteError()
+  return (
+    <>
+      <Navigation />
+      <main className="main-not-found">
+        <section>
+          <h1>Opa!</h1>
+          <p>Desculpe, um erro inesperado aconteceu:</p>
+          <p><i>{error.message}</i></p>
+        </section>
+      </main>
+    </>
+  )
+}
 
 const App = () => {
   const router = createBrowserRouter(
     createRoutesFromElements(
-      <Route path="/">
+      <Route path="/" errorElement={<ErroPage />}>
         <Route index element={<HomePage />} />
         <Route path="sobre" element={<AboutPage />} />
         <Route path="preco" element={<PricePage />} />
