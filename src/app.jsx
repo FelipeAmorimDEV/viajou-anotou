@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvent } from 'rea
 import localforage from "localforage"
 import dataFormater from "@/utils/data-format"
 
+
 const HeaderLogo = ({ variant = 'dark' }) =>
   <header>
     <Link to="/">
@@ -186,8 +187,9 @@ const ChangeCenter = ({ position }) => {
 
 const ClickToCity = () => {
   const navigate = useNavigate()
+  const id = crypto.randomUUID()
   useMapEvent({
-    click: (e) => navigate(`/app/form/?latitude=${e.latlng.lat}&longitude=${e.latlng.lng}`)
+    click: (e) => navigate(`cidades/${id}/edit?latitude=${e.latlng.lat}&longitude=${e.latlng.lng}`)
   })
 }
 
@@ -283,22 +285,6 @@ const removeTripAction = async ({ params }) => {
   return redirect(`/app/cidades/${params.id}`)
 }
 
-const updateTripAction = async ({ params, request }) => {
-  const cities = await localforage.getItem('cities')
-  const formResponse = await request.formData()
-  const { name, notes, date } = Object.fromEntries(formResponse)
-  await localforage.setItem('cities', cities.map(city => city.id === params.id ? { ...city, name, notes, date } : city))
-
-  return redirect(`/app/cidades/${params.id}`)
-}
-
-const loadTripDetails = async ({ params }) => {
-  const cities = await localforage.getItem('cities')
-
-  return cities.find(city => city.id === params.id)
-}
-
-
 const CityDetails = () => {
   const trips = useOutletContext()
   const params = useParams()
@@ -346,32 +332,44 @@ const CityDetails = () => {
 
 }
 
-const submitTripFormAction = async ({ request }) => {
+const submitTripAction = async ({ request, params }) => {
+  const formData = await request.formData()
+  const cities = await localforage.getItem('cities')
+  const cityInStorage = cities.find(city => city.id === params.id)
+  if (cityInStorage) {
+    const city = { ...cityInStorage, ...Object.fromEntries(formData) }
+    await localforage.setItem('cities', [...cities.filter(city => city.id !== params.id), city])
+    return redirect(`/app/cidades/${city.id}`)
+  }
+
   const url = new URL(request.url)
-  const latitude = url.searchParams.get('latitude')
-  const longitude = url.searchParams.get('longitude')
+  const [latitude, longitude] = ['latitude', 'longitude'].map(item => url.searchParams.get(item))
   const geoResponse = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client/?latitude=${latitude}&longitude=${longitude}&localityLanguage=pt-BR`)
   const { countryName, countryCode } = await geoResponse.json()
-  const formResponse = await request.formData()
-  const { name, notes, date } = Object.fromEntries(formResponse)
 
-  const city = { name, notes, date, id: crypto.randomUUID(), position: { latitude, longitude }, country: countryName, countryCode: countryCode.toLowerCase() }
+  const city = {
+    ...Object.fromEntries(formData),
+    id: crypto.randomUUID(),
+    position: { latitude, longitude },
+    country: countryName,
+    countryCode: countryCode.toLowerCase()
+  }
 
-  const prevCities = await localforage.getItem('cities')
-  localforage.setItem('cities', prevCities ? [...prevCities, city] : [city])
-
+  localforage.setItem('cities', cities ? [...cities, city] : [city])
   return redirect(`/app/cidades/${city.id}`)
 }
 
-const loadFormInitialData = async ({ request }) => {
-  const url = new URL(request.url)
-  const latitude = url.searchParams.get('latitude')
-  const longitude = url.searchParams.get('longitude')
-  const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client/?latitude=${latitude}&longitude=${longitude}&localityLanguage=pt-BR`)
-  const data = await response.json()
-  console.log(data)
+const editTripLoader = async ({ request, params }) => {
+  const cityInStorage = await localforage.getItem('cities').then(cities => cities?.find(city => city.id === params.id))
+  if (cityInStorage) {
+    return cityInStorage
+  }
 
-  return { name: data.city, country: data.countryName, countryCode: data.countryCode.toLowerCase() }
+  const url = new URL(request.url)
+  const [latitude, longitude] = ['latitude', 'longitude'].map(item => url.searchParams.get(item))
+  const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client/?latitude=${latitude}&longitude=${longitude}&localityLanguage=pt-BR`)
+  const info = await response.json()
+  return { name: info.city, country: info.countryName, countryCode: info.countryCode.toLowerCase() }
 }
 
 const TripForm = () => {
@@ -460,8 +458,7 @@ const App = () => {
           <Route path="cidades" element={<CitiesList />} />
           <Route path="cidades/:id" element={<CityDetails />} />
           <Route path="cidades/:id/delete" action={removeTripAction} />
-          <Route path="cidades/:id/edit" element={<TripForm />} loader={loadTripDetails} action={updateTripAction} />
-          <Route path="form" element={<TripForm />} loader={loadFormInitialData} action={submitTripFormAction} />
+          <Route path="cidades/:id/edit" element={<TripForm />} loader={editTripLoader} action={submitTripAction} />
           <Route path="paises" element={<VisitedCountries />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
