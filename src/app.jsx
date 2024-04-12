@@ -329,29 +329,33 @@ const CityDetails = () => {
 
 }
 
+const getCountryInfo = async (requestUrl) => {
+  const url = new URL(requestUrl)
+  const [latitude, longitude] = ['latitude', 'longitude'].map(item => url.searchParams.get(item))
+  const geoResponse = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client/?latitude=${latitude}&longitude=${longitude}&localityLanguage=pt-BR`)
+  const { countryName, countryCode, city } = await geoResponse.json()
+  const countryInfo = { country: countryName, countryCode: countryCode.toLowerCase(), latitude, longitude, name: city }
+  return countryInfo
+}
+
 const submitTripAction = async ({ request, params }) => {
   const formData = await request.formData()
   const cities = await localforage.getItem('cities')
-  const cityInStorage = cities.find(city => city.id === params.id)
+  const cityInStorage = cities?.find(city => city.id === params.id)
   if (cityInStorage) {
     const city = { ...cityInStorage, ...Object.fromEntries(formData) }
     await localforage.setItem('cities', [...cities.filter(city => city.id !== params.id), city])
     return redirect(`/app/cidades/${city.id}`)
   }
 
-  const url = new URL(request.url)
-  const [latitude, longitude] = ['latitude', 'longitude'].map(item => url.searchParams.get(item))
-  const geoResponse = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client/?latitude=${latitude}&longitude=${longitude}&localityLanguage=pt-BR`)
-  const { countryName, countryCode } = await geoResponse.json()
-
+  const { country, countryCode, latitude, longitude } = await getCountryInfo(request.url)
   const city = {
     ...Object.fromEntries(formData),
     id: crypto.randomUUID(),
     position: { latitude, longitude },
-    country: countryName,
-    countryCode: countryCode.toLowerCase()
+    country,
+    countryCode
   }
-
   localforage.setItem('cities', cities ? [...cities, city] : [city])
   return redirect(`/app/cidades/${city.id}`)
 }
@@ -362,11 +366,8 @@ const editTripLoader = async ({ request, params }) => {
     return cityInStorage
   }
 
-  const url = new URL(request.url)
-  const [latitude, longitude] = ['latitude', 'longitude'].map(item => url.searchParams.get(item))
-  const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client/?latitude=${latitude}&longitude=${longitude}&localityLanguage=pt-BR`)
-  const info = await response.json()
-  return { name: info.city, country: info.countryName, countryCode: info.countryCode.toLowerCase() }
+  const { country, countryCode, name } = await getCountryInfo(request.url)
+  return { name, country, countryCode }
 }
 
 const TripForm = () => {
