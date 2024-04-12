@@ -109,6 +109,14 @@ const fakeAuthProvider = {
   }
 }
 
+const loginLoader = () => {
+  if (fakeAuthProvider.isAuthenticated) {
+    return redirect('/app')
+  }
+
+  return null
+}
+
 const loginAction = async ({ request }) => {
   const { email } = Object.fromEntries(await request.formData())
 
@@ -428,7 +436,7 @@ const App = () => {
         <Route index element={<HomePage />} />
         <Route path="sobre" element={<AboutPage />} />
         <Route path="preco" element={<PricePage />} />
-        <Route path="login" element={<LoginPage />} action={loginAction} />
+        <Route path="login" element={<LoginPage />} loader={loginLoader} action={loginAction} />
         <Route path="app" element={<DashboardLayout />} loader={loadDashboard}>
           <Route index element={<Navigate to="cidades" replace />} />
           <Route path="cidades" element={<CitiesList />} />
