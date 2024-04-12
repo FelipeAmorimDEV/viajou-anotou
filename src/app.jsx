@@ -207,10 +207,7 @@ const loadDashboard = async () => {
 const DashboardLayout = () => {
   const trips = useLoaderData()
   const [searchParams] = useSearchParams()
-
-  const latitude = searchParams.get('latitude')
-  const longitude = searchParams.get('longitude')
-
+  const [latitude, longitude] = ['latitude', 'longitude'].map(item => searchParams.get(item))
 
   return (
     <main className="main-app-layout">
