@@ -1,6 +1,7 @@
 import { RouterProvider, useParams, createBrowserRouter, createRoutesFromElements, Route, NavLink, Link, useLocation, Outlet, Navigate, Form, useNavigate, useLoaderData, useOutletContext, useSearchParams, redirect, useRouteError, useActionData } from "react-router-dom"
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvent } from 'react-leaflet'
 import localforage from "localforage"
+import dataFormater from "@/utils/data-format"
 
 const HeaderLogo = ({ variant = 'dark' }) =>
   <header>
@@ -256,13 +257,16 @@ const CitiesList = () => {
       <div className="cities">
         {trips.map((trip) =>
           <Link key={trip.id} to={`${trip.id}?latitude=${trip.position.latitude}&longitude=${trip.position.longitude}`}>
-            <img
-              src={`https://flagcdn.com/20x15/${trip.countryCode}.png`}
-              srcSet={`https://flagcdn.com/40x30/${trip.countryCode}.png 2x, https://flagcdn.com/60x45/${trip.countryCode}.png 3x`}
-              width="20"
-              height="15"
-              alt={trip.country} />
-            <h3>{trip.name}</h3>
+            <div className="city-container">
+              <img
+                src={`https://flagcdn.com/20x15/${trip.countryCode}.png`}
+                srcSet={`https://flagcdn.com/40x30/${trip.countryCode}.png 2x, https://flagcdn.com/60x45/${trip.countryCode}.png 3x`}
+                width="20"
+                height="15"
+                alt={trip.country} />
+              <h3>{trip.name}</h3>
+            </div>
+            <p>{dataFormater.format(new Date(trip.date))}</p>
           </Link>
         )}
       </div>
@@ -294,6 +298,7 @@ const loadTripDetails = async ({ params }) => {
   return cities.find(city => city.id === params.id)
 }
 
+
 const CityDetails = () => {
   const trips = useOutletContext()
   const params = useParams()
@@ -307,7 +312,7 @@ const CityDetails = () => {
     <div className="city-details">
       <div className="row">
         <div>
-          <h5>Nome da cidade</h5>
+          <h5 className="mb-1">Nome da cidade</h5>
           <div className="flag-content">
             <img
               src={`https://flagcdn.com/20x15/${cityDetails.countryCode}.png`}
@@ -319,11 +324,11 @@ const CityDetails = () => {
           </div>
         </div>
         <div>
-          <h5>Quando você foi para {cityDetails.name}</h5>
-          <p>{cityDetails.date}</p>
+          <h5 className="mb-1">Quando você foi para {cityDetails.name}</h5>
+          <p>{dataFormater.format(new Date(cityDetails.date))}</p>
         </div>
         <div>
-          <h5>Suas anotações</h5>
+          <h5 className="mb-1">Suas anotações</h5>
           <p>{cityDetails.notes}</p>
         </div>
         <div className="citydetails-btns">

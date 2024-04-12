@@ -289,7 +289,7 @@ main {
 .cities a {
   display: flex;
   align-items: center;
-  gap: 1.6rem;
+  justify-content: space-between;
   background-color: var(--color-light-2);
   border-radius: 5px;
   padding: 1.2rem 2rem;
@@ -297,6 +297,17 @@ main {
   cursor: pointer;
   text-decoration: none;
   color: inherit;
+}
+
+.cities a p {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.city-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .cities h3 {
@@ -352,6 +363,10 @@ main {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+}
+
+.mb-1 {
+  margin-bottom: 0.5rem;
 }
 
 .citydetails-btns {
