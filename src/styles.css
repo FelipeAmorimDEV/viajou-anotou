@@ -173,7 +173,6 @@ main {
   padding: 2rem 3rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
   width: 48rem;
   margin: 8rem auto;
   font-size: 1.6rem;
@@ -187,6 +186,7 @@ main {
   border: none;
   border-radius: 5px;
   margin-top: 5px;
+  margin-bottom: 1rem;
 }
 
 .form-login button {
@@ -200,6 +200,10 @@ main {
 
 .form-login button:hover {
   cursor: pointer;
+}
+
+.form-login p {
+  font-size: 1.5rem;
 }
 
 .main-app-layout {

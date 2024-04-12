@@ -1,4 +1,4 @@
-import { RouterProvider, useParams, createBrowserRouter, createRoutesFromElements, Route, NavLink, Link, useLocation, Outlet, Navigate, Form, useNavigate, useLoaderData, useOutletContext, useSearchParams, redirect, useRouteError } from "react-router-dom"
+import { RouterProvider, useParams, createBrowserRouter, createRoutesFromElements, Route, NavLink, Link, useLocation, Outlet, Navigate, Form, useNavigate, useLoaderData, useOutletContext, useSearchParams, redirect, useRouteError, useActionData } from "react-router-dom"
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvent } from 'react-leaflet'
 import localforage from "localforage"
 
@@ -109,28 +109,35 @@ const fakeAuthProvider = {
   }
 }
 
-const loginAction = async ({request}) =>  {
+const loginAction = async ({ request }) => {
   const { email } = Object.fromEntries(await request.formData())
-  
+
+  if (email.length <= 4) {
+    return { message: 'O e-mail precisa ter pelo menos 4 caracteres.' }
+  }
+
   try {
     await fakeAuthProvider.signIn(email)
   } catch {
-    return { error: 'Não foi possivel efetuar o login. Por favor, tente novamente'}
+    return { message: 'Não foi possivel efetuar o login. Por favor, tente novamente' }
   }
 
   return redirect('/app')
 }
 
 const LoginPage = () => {
+  const error = useActionData()
+
   return (
     <>
       <Navigation />
       <main className="main-login">
-        <Form method="post" className="form-login">
+        <Form method="post" className="form-login" replace>
           <label>
             Email
-            <input type="text" defaultValue="oi@joaquim.com" name="email"/>
+            <input type="text" defaultValue="oi@joaquim.com" name="email" />
           </label>
+          {error && error.message && <p style={{ color: 'red' }}>{error.message}</p>}
           <button>Login</button>
         </Form>
       </main>
@@ -379,7 +386,7 @@ const TripForm = () => {
 
 const VisitedCountries = () => {
   const trips = useOutletContext()
-  const uniqueVisitedCountries = trips.reduce((acc, item) => acc.includes(item.country) ? [...acc] : [...acc, {countryName: item.country, countryCode: item.countryCode}], [])
+  const uniqueVisitedCountries = trips.reduce((acc, item) => acc.includes(item.country) ? [...acc] : [...acc, { countryName: item.country, countryCode: item.countryCode }], [])
 
   return (
     <ul className="countries">
