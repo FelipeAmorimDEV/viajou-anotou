@@ -407,19 +407,19 @@ const TripForm = () => {
 
 const VisitedCountries = () => {
   const trips = useOutletContext()
-  const uniqueVisitedCountries = trips.reduce((acc, item) => acc.includes(item.country) ? [...acc] : [...acc, { countryName: item.country, countryCode: item.countryCode }], [])
-
+  const uniqueVisitedCountries = trips.reduce((acc, { country, countryCode }) =>
+    acc.some(cty => cty.country === country) ? [...acc] : [...acc, { country, countryCode }], [])
   return (
     <ul className="countries">
-      {uniqueVisitedCountries.map(({ countryName, countryCode }) =>
-        <li key={countryName}>
+      {uniqueVisitedCountries.map(({ country, countryCode }) =>
+        <li key={country}>
           <img
             src={`https://flagcdn.com/32x24/${countryCode}.png`}
             srcSet={`https://flagcdn.com/64x48/${countryCode}.png 2x, https://flagcdn.com/96x72/${countryCode}.png 3x`}
             width="28"
             height="21"
-            alt={countryName} />
-          {countryName}
+            alt={country} />
+          {country}
         </li>
       )}
     </ul>
