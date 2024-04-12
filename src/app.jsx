@@ -109,18 +109,30 @@ const fakeAuthProvider = {
   }
 }
 
+const loginAction = async ({request}) =>  {
+  const { email } = Object.fromEntries(await request.formData())
+  
+  try {
+    await fakeAuthProvider.signIn(email)
+  } catch {
+    return { error: 'Não foi possivel efetuar o login. Por favor, tente novamente'}
+  }
+
+  return redirect('/app')
+}
+
 const LoginPage = () => {
   return (
     <>
       <Navigation />
       <main className="main-login">
-        <form className="form-login" onSubmit={(e) => e.preventDefault()}>
+        <Form method="post" className="form-login">
           <label>
             Email
-            <input type="text" defaultValue="oi@joaquim.com" />
+            <input type="text" defaultValue="oi@joaquim.com" name="email"/>
           </label>
           <button>Login</button>
-        </form>
+        </Form>
       </main>
     </>
   )
@@ -409,7 +421,7 @@ const App = () => {
         <Route index element={<HomePage />} />
         <Route path="sobre" element={<AboutPage />} />
         <Route path="preco" element={<PricePage />} />
-        <Route path="login" element={<LoginPage />} />
+        <Route path="login" element={<LoginPage />} action={loginAction} />
         <Route path="app" element={<DashboardLayout />} loader={loadDashboard}>
           <Route index element={<Navigate to="cidades" replace />} />
           <Route path="cidades" element={<CitiesList />} />
