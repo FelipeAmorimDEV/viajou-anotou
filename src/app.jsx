@@ -94,6 +94,21 @@ const PricePage = () => {
   )
 }
 
+const fakeAuthProvider = {
+  isAuthenticated: false,
+  email: null,
+  signIn: async function (email) {
+    await new Promise(resolve => setTimeout(resolve, 500))
+    this.isAuthenticated = true
+    this.email = email
+  },
+  signOut: async function () {
+    await new Promise(resolve => setTimeout(resolve, 500))
+    this.isAuthenticated = false
+    this.email = null
+  }
+}
+
 const LoginPage = () => {
   return (
     <>
@@ -103,10 +118,6 @@ const LoginPage = () => {
           <label>
             Email
             <input type="text" defaultValue="oi@joaquim.com" />
-          </label>
-          <label>
-            Senha
-            <input type="password" defaultValue="mamao3214" />
           </label>
           <button>Login</button>
         </form>
@@ -145,9 +156,13 @@ const ClickToCity = () => {
 
 const curitibaCoordinates = { latitude: '-25.438611111089152', longitude: '-49.260972203972706' }
 
-const loadTrips = async () => {
-  const cities = await localforage.getItem('cities')
-  return cities ?? []
+const loadDashboard = async () => {
+  if (fakeAuthProvider.isAuthenticated) {
+    const cities = await localforage.getItem('cities')
+    return cities ?? []
+  }
+
+  return redirect('/login')
 }
 
 const DashboardLayout = () => {
@@ -395,7 +410,7 @@ const App = () => {
         <Route path="sobre" element={<AboutPage />} />
         <Route path="preco" element={<PricePage />} />
         <Route path="login" element={<LoginPage />} />
-        <Route path="app" element={<DashboardLayout />} loader={loadTrips}>
+        <Route path="app" element={<DashboardLayout />} loader={loadDashboard}>
           <Route index element={<Navigate to="cidades" replace />} />
           <Route path="cidades" element={<CitiesList />} />
           <Route path="cidades/:id" element={<CityDetails />} />
