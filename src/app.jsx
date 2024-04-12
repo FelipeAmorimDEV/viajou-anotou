@@ -133,6 +133,15 @@ const loginAction = async ({ request }) => {
   return redirect('/app')
 }
 
+const logoutAction = async () => {
+  await fakeAuthProvider.signOut()
+
+  return redirect('/')
+}
+
+const logoutLoader = () => redirect('/')
+
+
 const LoginPage = () => {
   const error = useActionData()
 
@@ -212,7 +221,7 @@ const DashboardLayout = () => {
         </nav>
         <Outlet context={trips} />
       </aside>
-      <div className="map">
+      <div className="map p-r">
         <MapContainer className="map-container" center={[curitibaCoordinates.latitude, curitibaCoordinates.longitude]} zoom={13} scrollWheelZoom={true}>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -230,6 +239,9 @@ const DashboardLayout = () => {
           <ClickToCity />
 
         </MapContainer>
+        <Form method="post" action="/logout">
+          <button className="logout-btn">Logout</button>
+        </Form>
       </div>
     </main>
   )
@@ -437,6 +449,7 @@ const App = () => {
         <Route path="sobre" element={<AboutPage />} />
         <Route path="preco" element={<PricePage />} />
         <Route path="login" element={<LoginPage />} loader={loginLoader} action={loginAction} />
+        <Route path="logout" action={logoutAction} loader={logoutLoader} />
         <Route path="app" element={<DashboardLayout />} loader={loadDashboard}>
           <Route index element={<Navigate to="cidades" replace />} />
           <Route path="cidades" element={<CitiesList />} />
